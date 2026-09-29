@@ -1,129 +1,110 @@
-# 02 Control Flow
+# 02 · Control Flow
 
-## Concepts
+本章主要学习 LangGraph 中的图控制流机制。
 
-- Conditional Edge
-- Router
-- Route Result
-- Node
-- Mapping
+在完成 Graph Basics 后，进一步理解节点之间如何根据 State 和条件进行动态跳转，以及如何通过图结构实现循环执行。
 
-## 1. 为什么需要 Conditional Edge
+---
 
-普通 Edge：
-A → B
+## 学习内容
 
-只能固定走向。
+### 02_1 · Conditional Edge
 
-Conditional Edge：
-A → Router → B / C
+学习 LangGraph 中的条件边（Conditional Edge）。
 
-可以根据 State 决定下一步。
+核心内容：
 
-## 2. Router 是什么
+* Conditional Edge 的作用
+* Router 的概念
+* Router 与 Node 的区别
+* Router 返回值（Route Result）
+* Route Result 与实际 Node Name 的关系
+* Mapping 映射机制
+* `START` 作为条件路由起点
+* 条件路由的基本执行流程
 
-Router 本质上是一个用于“做路由判断”的函数。
+基本结构：
 
-State
- ↓
-Router
- ↓
-Route Result
-
-Router 不负责真正执行业务。
-
-## 3. Router 返回值 ≠ Node 名称
-
-例如：
-
-Router 返回：
-"go_hello"
-
-真正的 Node：
-"hello"
-
-通过映射关系：
-
-"go_hello" → "hello"
-
-所以：
-
-Router 返回的是“选择结果”
-Node 名称是“实际执行目标”
-
-## 4. Conditional Edge
-
-核心结构：
-
-builder.add_conditional_edges(
-    START,
-    router,
-    {
-        "hello": "hello",
-        "world": "world"
-    }
-)
-
-其中：
-
+```text
 START
-→ 从哪里开始进行条件路由
-
-router
-→ 如何判断
-
-mapping
-→ 判断结果对应哪个 Node
-
-## 5. 实验
-
-route = "hello"
-
-结果：
-
-Hi! Hello
-
-route = "world"
-
-结果：
-
-Hi! World
-
-## 6. 踩坑记录
-
-错误：
-
-builder.add_edge(START, "router")
-
-报错：
-
-ValueError: Found edge ending at unknown node `router`
-
-原因：
-
-当前 router 只是 Conditional Edge 使用的路由函数，
-并不是 Graph 中注册的 Node。
-
-## 7. 我的理解
-
-Conditional Edge 是一种条件路由机制。
-
-Router 根据当前 State 做判断，
-返回一个路由结果，
-Conditional Edge 根据映射关系找到真正要执行的 Node。
-
-## 8. Execution Flow
-
-State
- ↓
+  ↓
 Router
- ↓
-Route Result
- ↓
-Mapping
- ↓
+  ├── hello
+  └── world
+```
+
+---
+
+### 02_2 · Loop Mechanism
+
+学习如何利用 LangGraph 的图结构实现循环执行。
+
+核心内容：
+
+* Loop 的本质
+* 图中的 Back Edge
+* Conditional Edge 与 Loop 的结合
+* Agent → Tool → Agent 的典型循环结构
+* State 在循环中的持续更新
+* Loop 的终止条件
+* 无限循环产生的原因
+
+典型结构：
+
+```text
+        ┌──────────────┐
+        │              ↓
+START → Agent → Router ───→ Tool
+          │                 │
+          │                 │
+          └──→ END          └──→ Agent
+```
+
+核心理解：
+
+> Conditional Edge 决定是否继续，Back Edge 决定如何返回。
+
+---
+
+## 学习目标
+
+完成本章后，应能够理解：
+
+```text
 Node
  ↓
-State Update
+Edge
  ↓
-Next Node
+Conditional Edge
+ ↓
+Router
+ ↓
+Loop
+```
+
+并能够从图结构的角度分析 LangGraph 的执行流程，而不是仅仅记忆 API。
+
+---
+
+## 文件结构
+
+```text
+02-control-flow/
+├── README.md
+├── 02_1_conditional_edge.py
+└── 02_2_loop_mechanism.py
+```
+
+---
+
+## 学习路线
+
+```text
+01 · Graph Basics
+        ↓
+02 · Control Flow
+        ├── 02_1 · Conditional Edge
+        └── 02_2 · Loop Mechanism
+```
+
+后续将在此基础上继续学习更复杂的 Agent 工作流与状态管理机制。
